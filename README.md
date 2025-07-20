@@ -34,6 +34,9 @@ But it will not instantly make you a professional, you do that by practicing
 ### Status
 - Project in early development (started July 1-2, 2025)
 - July 2nd 2025: Currently finalizing data sources and initial system design
+- July 3rd-10th: Started work on the Backend
+- July 13th: Started work on the Fronted
+- July 20th: Frontend alpha done, won't commit just yet needs a lot of tweaking, also successfuly connected Frontend to Backend
 
 ### Next Steps
 - Begin collecting drum audio and MIDI data
@@ -44,4 +47,5 @@ But it will not instantly make you a professional, you do that by practicing
 
 ### Changelog
 - 2025-07-02: Project officially initialized and planning stage is done, also added this README to it
+- 2025-7-13: Started work on the Frontend and how to connect it to the Backend (No ML stuff yet!)
 
