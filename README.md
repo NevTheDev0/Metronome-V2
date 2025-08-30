@@ -47,5 +47,6 @@ But it will not instantly make you a professional, you do that by practicing
 
 ### Changelog
 - 2025-07-02: Project officially initialized and planning stage is done, also added this README to it
-- 2025-7-13: Started work on the Frontend and how to connect it to the Backend (No ML stuff yet!)
+- 2025-07-13: Started work on the Frontend and how to connect it to the Backend (No ML stuff yet!)
+- 2025-08-30: Got sidetracked, almost went insane because of React, anyways finished the Data Logger(Yes me playing) and Extracted Features will upload files soon
 
