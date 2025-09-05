@@ -38,6 +38,7 @@ But it will not instantly make you a professional, you do that by practicing
 - July 13th: Started work on the Fronted
 - July 20th: Frontend alpha done, won't commit just yet needs a lot of tweaking, also successfuly connected Frontend to Backend
 - September 1st: Finished FE, and Baseline model (I took a break working from this dw I'm back)
+- September 5th: Trained model on all the wrong features, will redo the model again(My bad)
 
 ### Next Steps
 - Begin collecting drum audio and MIDI data ✅
@@ -51,4 +52,5 @@ But it will not instantly make you a professional, you do that by practicing
 - 2025-07-13: Started work on the Frontend and how to connect it to the Backend (No ML stuff yet!)
 - 2025-08-30: Got sidetracked, almost went insane because of React, anyways finished the Data Logger(Yes me playing) and Extracted Features will upload files soon
 - 2025-09-1: Finished Model Training, tested it rigoursly it worked out, also I forgot to commit the files... I'll do it when I feel like it
+- 2025-09-5: Trained the model, then realized... why am I training a "timing" classifier on "pose" data? Redoing entire workflow just because(DW I will not slack off this time)
 
