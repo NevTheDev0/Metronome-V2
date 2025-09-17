@@ -178,31 +178,51 @@ export default function Metronome({
     }, [cleanupAudioNodes]);
 
     // --- Render beat indicators ---
+    // --- Render beat indicators ---
     return (
-        <div style={{ display: "flex", gap: "8px", marginTop: "16px" }}>
-            {Array.from({ length: beatsPerMeasure }, (_, i) => {
-                const beatIndex = i + 1;
-                const isActive = beatIndex === currentBeat;
-                const isAccent = isActive && isAccentUI;
+        <div className="w-full max-w-sm mx-auto bg-neutral-900 text-white p-3 rounded-xl shadow-md">
+            {/* Top row: BPM + status */}
+            <div className="flex justify-between items-center text-xs text-gray-400 mb-2">
+                <span>{isPlaying ? "Playing" : "Paused"}</span>
+                <span>{bpm} BPM</span>
+            </div>
 
-                return (
-                    <div
-                        key={beatIndex}
-                        style={{
-                            width: 24,
-                            height: 24,
-                            borderRadius: "50%",
-                            backgroundColor: isActive
-                                ? isAccent
-                                    ? accentColor
-                                    : beatColor
-                                : "#ccc",
-                            transform: isActive ? "scale(1.2)" : "scale(1)",
-                            transition: "all 0.1s ease",
-                        }}
-                    />
-                );
-            })}
+            {/* Beat circles */}
+            <div className="flex justify-center gap-2 mb-2">
+                {Array.from({ length: beatsPerMeasure }, (_, i) => {
+                    const beatIndex = i + 1;
+                    const isActive = beatIndex === currentBeat;
+                    const isAccent = isActive && isAccentUI;
+
+                    return (
+                        <div
+                            key={beatIndex}
+                            className={`
+              w-5 h-5 rounded-full
+              transition-all duration-200
+              ${isActive
+                                    ? isAccent
+                                        ? "bg-blue-500 scale-125 shadow-[0_0_8px_rgba(59,130,246,0.8)]"
+                                        : "bg-sky-400 scale-110 shadow-[0_0_6px_rgba(56,189,248,0.6)]"
+                                    : "bg-gray-600"}
+            `}
+                        />
+                    );
+                })}
+            </div>
+
+            {/* Progress bar */}
+            <div className="w-full h-1 bg-gray-700 rounded-full overflow-hidden">
+                <div
+                    className="h-full bg-sky-400 transition-all duration-150"
+                    style={{
+                        width: `${(currentBeat / beatsPerMeasure) * 100}%`,
+                    }}
+                />
+            </div>
         </div>
     );
+
+
+
 }
