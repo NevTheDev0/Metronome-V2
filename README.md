@@ -1,6 +1,10 @@
 # Metronome-V2
 AI Drumming Coach for those looking to self teach, and because I'm a drummer
 
+### Live Site
+You can try it out here 👉 (or don't and keep reading the README like a nerd) : [Metronome-V2 Demo](https://metronome-v2.vercel.app/)
+
+
 ### Why?
 One of the hardest parts about drumming alone is that there's really nobody around who can criticize the mistakes you make during playing, this project hopes to help you out
 
