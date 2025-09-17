@@ -140,25 +140,8 @@ export default function PoseWebcam({ poseFramesRef }) {
     }, [isCameraOn, stream]);
 
     return (
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: "4px" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "4px" }}>
             <div style={{ position: "relative", width: "640px", height: "480px" }}>
-                <button
-                    onClick={() => (isCameraOn ? stopCamera() : startCamera())}
-                    disabled={!isModelLoaded}
-                    style={{
-                        position: "absolute",
-                        zIndex: 10,
-                        padding: "8px",
-                        margin: "8px",
-                        backgroundColor: "#2563EB",
-                        color: "white",
-                        borderRadius: "4px",
-                        cursor: "pointer",
-                    }}
-                >
-                    {isCameraOn ? "Stop Camera" : "Start Camera"}
-                </button>
-
                 <video
                     ref={videoRef}
                     autoPlay
@@ -185,6 +168,22 @@ export default function PoseWebcam({ poseFramesRef }) {
                     </div>
                 )}
             </div>
+
+            {/* Move the button below the video/canvas container */}
+            <button
+                onClick={() => (isCameraOn ? stopCamera() : startCamera())}
+                disabled={!isModelLoaded}
+                style={{
+                    marginTop: "8px",
+                    padding: "8px 16px",
+                    backgroundColor: isCameraOn ? "#DC2626" : "#2563EB",
+                    color: "white",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                }}
+            >
+                {isCameraOn ? "Stop Camera" : "Start Camera"}
+            </button>
         </div>
     );
-}
+};

@@ -6,9 +6,11 @@ import Metronome from "./components/Metronome";
 import Feedback from "./components/Feedback";
 
 export default function Home() {
+  // --- References & Session State ---
   const poseFramesRef = useRef([]);
+  const metronomeTicksRef = useRef([]);
+  const audioContextRef = useRef(null);
 
-  // Fix 1: Initialize sessionLogRef as an object, not array
   const sessionLogRef = useRef({
     startTime: null,
     endTime: null,
@@ -18,143 +20,137 @@ export default function Home() {
     hits: [],
     streakCount: 0,
     streakHistory: [],
-    accuracy: 0
+    accuracy: 0,
   });
 
-  const metronomeTicksRef = useRef([]);
+  // --- Local State ---
+  const [bpm, setBpm] = useState(120);
   const [subdivision, setSubdivision] = useState(1);
-  const audioContextRef = useRef(null);
-  const [audioInitialized, setAudioInitialized] = useState(false);
   const [hits, setHits] = useState([]);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [audioInitialized, setAudioInitialized] = useState(false);
 
-  // Initialize audio context on user interaction
+  // --- Audio Setup ---
   const initializeAudio = async () => {
     if (!audioContextRef.current) {
       try {
         audioContextRef.current = new AudioContext();
-        if (audioContextRef.current.state === 'suspended') {
+        if (audioContextRef.current.state === "suspended") {
           await audioContextRef.current.resume();
         }
         setAudioInitialized(true);
-        console.log('Audio context initialized');
-      } catch (error) {
-        console.error('Failed to initialize audio:', error);
+      } catch (err) {
+        console.error("Audio init failed:", err);
       }
     }
   };
-  const [lastTiming, setLastTiming] = useState(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [bpm, setBpm] = useState(120);
 
-  // Fix 3: Less frequent cleanup - only every 10 ticks
-  let tickCount = useRef(0);
+  // --- Tick Management ---
+  const tickCount = useRef(0);
   const handleMetronomeTick = () => {
     tickCount.current++;
     if (tickCount.current % 10 === 0) {
       metronomeTicksRef.current = metronomeTicksRef.current.filter(
-        t => performance.now() - t.timestamp_ms < 5000
+        (t) => performance.now() - t.timestamp_ms < 5000
       );
     }
   };
 
+  // --- UI ---
   return (
-    <div style={{ padding: "16px" }}>
-      <h1>Music Trainer</h1>
+    <main className="min-h-screen bg-neutral-950 text-gray-200 p-6">
+      <h1 className="text-3xl font-bold text-center mb-8">Music Trainer</h1>
 
-      {/* --- Metronome Controls --- */}
-      <div style={{ marginBottom: "16px" }}>
-        <button
-          onClick={async () => {
-            // Ensure audio is ready
-            if (!audioInitialized) {
-              await initializeAudio();
-            }
+      {/* --- Main Layout: Controls + Webcam + Feedback --- */}
+      <section className="flex justify-center items-start gap-8 mb-8">
+        {/* Left Side - Controls */}
+        <div className="w-72 bg-neutral-900 p-6 rounded-2xl shadow-lg space-y-4">
+          {/* Start/Stop */}
+          <button
+            onClick={async () => {
+              if (!audioInitialized) await initializeAudio();
+              setIsPlaying((prev) => {
+                const next = !prev;
+                if (!next && sessionLogRef.current.sessionActive) {
+                  sessionLogRef.current.sessionActive = false;
+                  sessionLogRef.current.endTime = performance.now();
+                }
+                return next;
+              });
+            }}
+            className={`w-full py-3 rounded-xl font-semibold transition-colors duration-200 ${isPlaying
+                ? "bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/30"
+                : "bg-green-500 hover:bg-green-600 shadow-lg shadow-green-500/30"
+              }`}
+          >
+            {isPlaying ? "Stop Metronome" : "Start Metronome"}
+          </button>
 
-            // Toggle metronome
-            setIsPlaying(prev => {
-              const nextIsPlaying = !prev;
-
-              // If stopping, mark session as ended
-              if (!nextIsPlaying && sessionLogRef.current.sessionActive) {
-                sessionLogRef.current.sessionActive = false;
-                sessionLogRef.current.endTime = performance.now();
-                console.log("Session ended at", sessionLogRef.current.endTime);
-              }
-
-              return nextIsPlaying;
-            });
-          }}
-        >
-          {isPlaying ? "Stop Metronome" : "Start Metronome"}
-        </button>
-
-
-        <div style={{ marginTop: "8px" }}>
-          <label>
-            BPM: {bpm}
+          {/* BPM */}
+          <label className="flex items-center justify-between text-sm">
+            <span>BPM: {bpm}</span>
             <input
               type="range"
               min="40"
               max="240"
               value={bpm}
-              onChange={e => setBpm(Number(e.target.value))}
-              style={{ marginLeft: "8px" }}
+              onChange={(e) => setBpm(Number(e.target.value))}
+              className="w-32 accent-sky-400"
             />
           </label>
-          <div style={{ marginTop: "8px" }}>
-            <label>
-              Subdivision:
-              <select
-                value={subdivision}
-                onChange={e => setSubdivision(Number(e.target.value))}
-                style={{
-                  marginLeft: "8px",
-                  backgroundColor: "#222",
-                  color: "#eee",
-                  border: "1px solid #555",
-                  borderRadius: "4px",
-                  padding: "2px 6px",
-                }}
-              >
-                <option value={1}>Quarter Notes</option>
-                <option value={2}>Eighth Notes</option>
-                <option value={4}>Sixteenth Notes</option>
-              </select>
-            </label>
+
+          {/* Subdivision */}
+          <label className="flex items-center justify-between text-sm">
+            <span>Subdivision</span>
+            <select
+              value={subdivision}
+              onChange={(e) => setSubdivision(Number(e.target.value))}
+              className="ml-2 bg-neutral-800 text-white border border-gray-600 rounded-md px-2 py-1 text-sm"
+            >
+              <option value={1}>Quarter</option>
+              <option value={2}>Eighth</option>
+              <option value={4}>Sixteenth</option>
+            </select>
+          </label>
+
+          {/* Metronome Component */}
+          <div className="pt-4 border-t border-gray-700">
+            <Metronome
+              bpm={bpm}
+              subdivision={subdivision}
+              isPlaying={isPlaying}
+              metronomeTicksRef={metronomeTicksRef}
+              onTick={handleMetronomeTick}
+              audioContextRef={audioContextRef}
+              sessionLogRef={sessionLogRef}
+            />
           </div>
         </div>
-      </div>
 
-      {/* --- Webcam + Metronome --- */}
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
-        <PoseWebcam poseFramesRef={poseFramesRef} />
+        {/* Center - Webcam */}
+        <div className="flex-shrink-0">
+          <PoseWebcam poseFramesRef={poseFramesRef} />
+        </div>
 
-        <Metronome
-          bpm={bpm}
-          subdivision={subdivision}
-          isPlaying={isPlaying}
-          metronomeTicksRef={metronomeTicksRef}
-          onTick={handleMetronomeTick}
-          audioContextRef={audioContextRef}
+        {/* Right Side - Feedback */}
+        <div className="w-72 bg-neutral-900 p-6 rounded-2xl shadow-lg space-y-4">
+          <h2 className="text-xl font-bold mb-4 text-center">Live Feedback</h2>
+          <Feedback hits={hits} sessionLogRef={sessionLogRef} isPlaying={isPlaying} />
+        </div>
+      </section>
+
+      {/* --- MIDI Thing (below webcam) --- */}
+      <section className="flex justify-center mt-4">
+        <MIDIThing
           sessionLogRef={sessionLogRef}
+          poseFramesRef={poseFramesRef}
+          metronomeTicksRef={metronomeTicksRef}
+          audioContextRef={audioContextRef}
+          subdivision={subdivision}
+          bpm={bpm}
+          onHit={(hit) => setHits((prev) => [...prev, hit])}
         />
-      </div>
-
-      {/* --- MIDI Component --- */}
-      <MIDIThing
-        sessionLogRef={sessionLogRef}
-        poseFramesRef={poseFramesRef}
-        metronomeTicksRef={metronomeTicksRef}
-        audioContextRef={audioContextRef}
-        subdivision={subdivision}
-        bpm={bpm}
-        onHit={hit => setHits(prev => [...prev, hit])}
-      />
-
-      <Feedback
-        hits={hits}
-        sessionLogRef={sessionLogRef}
-      />
-    </div>
+      </section>
+    </main>
   );
 }
