@@ -178,7 +178,7 @@ export default function Metronome({
     }, [cleanupAudioNodes]);
 
     // --- Render beat indicators ---
-    // --- Render beat indicators ---
+
     return (
         <div className="w-full max-w-sm mx-auto bg-neutral-900 text-white p-3 rounded-xl shadow-md">
             {/* Top row: BPM + status */}

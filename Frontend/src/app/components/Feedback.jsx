@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 
-export default function Feedback({ hits, sessionLogRef }) {
+export default function Feedback({ hits, sessionLogRef, lastAdjustment }) {
     const [streak, setStreak] = useState(0);
     const [accuracy, setAccuracy] = useState(0);
+    const [flashMessage, setFlashMessage] = useState(null);
 
     function average(numbers) {
         if (numbers.length === 0) return 0;
@@ -73,17 +74,37 @@ export default function Feedback({ hits, sessionLogRef }) {
         consistency = Math.sqrt(variance);
     }
 
+    useEffect(() => {
+        if (!lastAdjustment) return;
+
+        setFlashMessage(null); // reset first
+        const timeout = setTimeout(() => setFlashMessage(lastAdjustment.type), 50);
+        const hide = setTimeout(() => setFlashMessage(null), 2000);
+
+        return () => {
+            clearTimeout(timeout);
+            clearTimeout(hide);
+        };
+    }, [lastAdjustment]);
+
+
+
+
     return (
         <div className="w-full max-w-md mx-auto bg-neutral-800 text-white p-4 rounded-2xl shadow-lg">
             <h2 className="text-lg font-bold text-center mb-4">Session Feedback</h2>
 
+            {/* Metrics Grid */}
             <div className="grid grid-cols-3 gap-4 text-center">
                 {/* Accuracy */}
                 <div className="flex flex-col items-center">
                     <div className="text-2xl font-bold text-green-400">{accuracy.toFixed(1)}%</div>
                     <div className="text-sm text-gray-400">Accuracy</div>
                     <div className="w-full bg-gray-700 h-2 rounded mt-1">
-                        <div className="bg-green-500 h-2 rounded" style={{ width: `${accuracy}%` }} />
+                        <div
+                            className="bg-green-500 h-2 rounded"
+                            style={{ width: `${accuracy}%` }}
+                        />
                     </div>
                 </div>
 
@@ -95,10 +116,31 @@ export default function Feedback({ hits, sessionLogRef }) {
 
                 {/* Consistency */}
                 <div className="flex flex-col items-center">
-                    <div className="text-2xl font-bold text-yellow-400">{consistency.toFixed(1)}ms</div>
+                    <div className="text-2xl font-bold text-yellow-400">
+                        {consistency.toFixed(1)}ms
+                    </div>
                     <div className="text-sm text-gray-400">Consistency</div>
                 </div>
             </div>
+
+            {/* Flash Tempo Adjustment */}
+            {flashMessage && (
+                <div
+                    className={`mt-4 text-center text-sm transition-opacity duration-500 ${flashMessage ? "opacity-100" : "opacity-0"
+                        }`}
+                >
+                    {flashMessage === "up" && (
+                        <span className="text-green-400">⬆️ Tempo increased</span>
+                    )}
+                    {flashMessage === "down" && (
+                        <span className="text-red-400">⬇️ Tempo decreased</span>
+                    )}
+                    {flashMessage === "none" && (
+                        <span className="text-gray-400">➖ No change</span>
+                    )}
+                </div>
+            )}
         </div>
     );
+
 }
