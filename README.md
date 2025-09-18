@@ -44,10 +44,12 @@ But it will not instantly make you a professional, you do that by practicing
 - September 1st: Finished FE, and Baseline model (I took a break working from this dw I'm back)
 - September 5th: Trained model on all the wrong features, will redo the model again(My bad)
 - September 17th: Refactored the drumming coach for 2 weeks and replanned how the AI model will work
+- September 18th: Added the "Adaptive Tempo" feature, which helps you assess and change tempo automatically (helps me personally because I don't know when to move a tempo up or down when practicing)
 
 ### Next Steps
 - Begin collecting drum audio and MIDI data ✅
 - Start feature extraction and baseline model testing ✅
+- Forgot to update this... will do soon
 
 
 
@@ -59,4 +61,5 @@ But it will not instantly make you a professional, you do that by practicing
 - 2025-09-1: Finished Model Training, tested it rigoursly it worked out, also I forgot to commit the files... I'll do it when I feel like it
 - 2025-09-5: Trained the model, then realized... why am I training a "timing" classifier on "pose" data? Redoing entire workflow just because(DW I will not slack off this time)
 - 2025-09-17: Got the baseline stuff done (Metronome, Hit Accuracy, Hit Timing, Streak, Pose Skeleton). I will update more stuff today to introduce new features
+- 2025-09-18: Added the "Adaptive Tempo" feature to the MetronomeV2 app
 
