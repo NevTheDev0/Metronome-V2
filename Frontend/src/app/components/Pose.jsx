@@ -1,8 +1,8 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react";
 import { PoseLandmarker, FilesetResolver, DrawingUtils } from "@mediapipe/tasks-vision";
 
-export default function PoseWebcam({ poseFramesRef }) {
+const PoseWebcam = forwardRef(({ poseFramesRef, sessionActive }, ref) => {
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
     const poseRef = useRef(null);
@@ -75,6 +75,8 @@ export default function PoseWebcam({ poseFramesRef }) {
             const ctx = canvas.getContext("2d");
             ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
+
+        drawingUtilsRef.current = null;
     }
 
     function predictWebcam() {
@@ -118,9 +120,18 @@ export default function PoseWebcam({ poseFramesRef }) {
         });
     }
 
+    // --- Force stop camera when session ends ---
+    useEffect(() => {
+        if (!sessionActive) {
+            stopCamera();
+        }
+    }, [sessionActive]);
+
     useEffect(() => {
         initPose();
-        return () => stopCamera();
+        return () => {
+            stopCamera();
+        };
     }, []);
 
     useEffect(() => {
@@ -139,6 +150,11 @@ export default function PoseWebcam({ poseFramesRef }) {
         }
     }, [isCameraOn, stream]);
 
+    // --- Expose stopCamera to parent ---
+    useImperativeHandle(ref, () => ({
+        stopCamera
+    }));
+
     return (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "4px" }}>
             <div style={{ position: "relative", width: "640px", height: "480px" }}>
@@ -153,7 +169,6 @@ export default function PoseWebcam({ poseFramesRef }) {
                     ref={canvasRef}
                     style={{ position: 'absolute', top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "black" }}
                 />
-
                 {error && (
                     <div style={{
                         position: "absolute",
@@ -169,7 +184,6 @@ export default function PoseWebcam({ poseFramesRef }) {
                 )}
             </div>
 
-            {/* Move the button below the video/canvas container */}
             <button
                 onClick={() => (isCameraOn ? stopCamera() : startCamera())}
                 disabled={!isModelLoaded}
@@ -186,4 +200,6 @@ export default function PoseWebcam({ poseFramesRef }) {
             </button>
         </div>
     );
-};
+});
+
+export default PoseWebcam;
