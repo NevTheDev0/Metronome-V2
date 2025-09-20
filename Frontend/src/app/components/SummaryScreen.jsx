@@ -13,9 +13,10 @@ export default function SummaryScreen({ summary, onRestart }) {
         ? Math.max(...summary.streakHistory)
         : 0;
 
-    const durationSec = summary.startedAt && summary.endedAt
-        ? Math.round((summary.endedAt - summary.startedAt) / 1000)
-        : 0;
+    const durationSec =
+        summary.startTime && summary.endTime
+            ? Math.round((summary.endTime - summary.startTime) / 1000)
+            : 0;
 
     const minutes = Math.floor(durationSec / 60);
     const seconds = durationSec % 60;
@@ -23,6 +24,7 @@ export default function SummaryScreen({ summary, onRestart }) {
 
     const accuracy = summary.accuracy ?? 0;
     const consistency = summary.consistency ?? 0;
+    const rollingAccuracy = summary.rollingAccuracy ?? 0;
 
     // Label accuracy qualitatively
     let accuracyLabel = "Needs Work";
@@ -36,20 +38,21 @@ export default function SummaryScreen({ summary, onRestart }) {
                 Duration: {durationFormatted}
             </p>
 
-            {/* Hero stat */}
+            {/* Hero stat (instant accuracy) */}
             <div className="flex flex-col items-center mb-8">
                 <div className="text-5xl font-bold text-green-400">
                     {accuracy.toFixed(1)}%
                 </div>
                 <div className="text-lg text-gray-300">{accuracyLabel}</div>
+                <div className="text-sm text-gray-500 mt-1">
+                    Ended at {accuracy.toFixed(1)}%
+                </div>
             </div>
 
             {/* Stats grid */}
             <div className="grid grid-cols-2 gap-4 text-center mb-6">
                 <div className="flex flex-col items-center">
-                    <div className="text-2xl font-bold text-blue-400">
-                        {longestStreak}
-                    </div>
+                    <div className="text-2xl font-bold text-blue-400">{longestStreak}</div>
                     <div className="text-sm text-gray-400">Longest Streak</div>
                 </div>
 

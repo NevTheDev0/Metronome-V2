@@ -12,6 +12,7 @@ export default function Home() {
   const metronomeTicksRef = useRef([]);
   const audioContextRef = useRef(null);
   const poseWebcamRef = useRef(null);
+  const lastDirectionRef = useRef("none");
 
   const sessionLogRef = useRef({
     startTime: null,
@@ -23,6 +24,8 @@ export default function Home() {
     streakCount: 0,
     streakHistory: [],
     accuracy: 0,
+    rollingAccuracy: 0,
+    consistency: 0,
   });
 
   // --- Local State ---
@@ -37,27 +40,47 @@ export default function Home() {
   const [summary, setSummary] = useState(null);
   const [sessionActive, setSessionActive] = useState(false);
 
+
   // --- Adaptive Tempo Effect ---
   useEffect(() => {
     if (!isPlaying || !adaptiveMode) return;
+
     const interval = setInterval(() => {
-      const accuracy = sessionLogRef.current.accuracy;
-      setBpm((prevBpm) => {
-        let updated = prevBpm;
-        if (accuracy > 80) {
-          setLastAdjustment({ type: "up", id: Date.now() });
-          updated = Math.min(prevBpm + 2, 240);
-        } else if (accuracy < 70) {
-          setLastAdjustment({ type: "down", id: Date.now() });
-          updated = Math.max(prevBpm - 2, 40);
-        } else {
-          setLastAdjustment({ type: "none", id: Date.now() });
+
+      const currentAccuracy = sessionLogRef.current.accuracy;
+      let rollingAccuracy = sessionLogRef.current.rollingAccuracy;
+
+
+      if (rollingAccuracy === 0 && currentAccuracy > 0) {
+        rollingAccuracy = currentAccuracy;
+      }
+
+
+      const alpha = 0.2;
+      rollingAccuracy = rollingAccuracy * (1 - alpha) + currentAccuracy * alpha;
+      sessionLogRef.current.rollingAccuracy = rollingAccuracy;
+
+      setBpm(prevBpm => {
+        let newBpm = prevBpm;
+        let newAdjustment = null;
+
+        if (rollingAccuracy > 75) {
+          newBpm = Math.min(prevBpm + 2, 240);
+          newAdjustment = { type: 'up', id: Date.now() };
+        } else if (rollingAccuracy < 65) {
+          newBpm = Math.max(prevBpm - 2, 40);
+          newAdjustment = { type: 'down', id: Date.now() };
         }
-        return updated;
+
+        setLastAdjustment(newAdjustment);
+        return newBpm;
       });
+
     }, 5000);
+
     return () => clearInterval(interval);
-  }, [isPlaying, adaptiveMode]);
+  }, [isPlaying, adaptiveMode]); // Dependency array is correct
+
 
   // --- Start Session ---
   function handleStartSession() {
@@ -75,8 +98,6 @@ export default function Home() {
       ...sessionLogRef.current,
       bpmStart: 120,
       bpmEnd: bpm,
-      startedAt: sessionLogRef.current.startTime,
-      endedAt: performance.now(),
     });
 
     setSessionActive(false);
@@ -102,6 +123,7 @@ export default function Home() {
       streakHistory: [],
       accuracy: 0,
       consistency: 0,
+      rollingAccuracy: 0,
     };
     poseFramesRef.current = [];
     metronomeTicksRef.current = [];
@@ -136,6 +158,7 @@ export default function Home() {
   const handleMetronomeTick = () => {
     tickCount.current++;
     if (tickCount.current % 10 === 0) {
+      // Keep last 5s of ticks
       metronomeTicksRef.current = metronomeTicksRef.current.filter(
         (t) => performance.now() - t.timestamp_ms < 5000
       );
@@ -222,28 +245,35 @@ export default function Home() {
                 >
                   {adaptiveMode ? "Disable Adaptive" : "Enable Adaptive"}
                 </button>
+                <p className="text-center text-xs text-white-400 mt-2">
+                  Tempo adapts using{" "}
+                  <span className="text-sky-400">rolling accuracy</span>. Keep it
+                  above 75% to speed up!
+                </p>
               </div>
             </div>
 
             {/* Center - Webcam */}
             <div className="flex-shrink-0">
-              <PoseWebcam poseFramesRef={poseFramesRef} sessionActive={sessionActive} ref={poseWebcamRef} />
+              <PoseWebcam
+                poseFramesRef={poseFramesRef}
+                sessionActive={sessionActive}
+                ref={poseWebcamRef}
+              />
             </div>
 
             {/* Right Side - Feedback + End Session */}
             <div className="w-72 bg-neutral-900 p-6 rounded-2xl shadow-lg space-y-4">
-              <h2 className="text-xl font-bold mb-4 text-center">
-                Live Feedback
-              </h2>
+              <h2 className="text-xl font-bold mb-4 text-center">Live Feedback</h2>
               <Feedback
                 hits={hits}
                 sessionLogRef={sessionLogRef}
                 isPlaying={isPlaying}
                 lastAdjustment={lastAdjustment}
                 key={sessionId}
+                rollingAccuracy={sessionLogRef.current.rollingAccuracy || 0}
               />
 
-              {/* End Session Button (moved here) */}
               <button
                 onClick={handleEndSession}
                 className="w-full py-3 rounded-xl font-semibold bg-red-600 hover:bg-red-700 shadow-lg shadow-red-600/30 transition-colors duration-200 mt-6"
@@ -268,7 +298,6 @@ export default function Home() {
           </section>
         </>
       ) : summary ? (
-        // --- SUMMARY MODE ---
         <SummaryScreen summary={summary} onRestart={handleResetSession} />
       ) : (
         // --- EMPTY STATE ---
