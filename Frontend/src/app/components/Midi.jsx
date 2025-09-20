@@ -14,6 +14,7 @@ export default function MIDIThing({
     const [lastTiming, setLastTiming] = useState(null);
     const [flashColor, setFlashColor] = useState(null);
     const sessionStartTime = useRef(performance.now());
+    const POSE_LATENCY_OFFSET = -120;
     const DEBUG = true;
 
     const log = (...args) => { if (DEBUG) console.log(...args); };
@@ -80,12 +81,13 @@ export default function MIDIThing({
             subBeatNumber: null
         };
 
-        // Pose association
+        // --- Pose association with latency compensation ---
         let closestFrame = null;
         let minDiff = Infinity;
         if (poseFramesRef?.current?.length) {
             for (const frame of poseFramesRef.current) {
-                const diff = Math.abs(frame.timestamp - timestamp);
+                const adjustedFrameTime = frame.timestamp + POSE_LATENCY_OFFSET; 
+                const diff = Math.abs(adjustedFrameTime - timestamp);
                 if (diff < minDiff || (diff === minDiff && frame.timestamp > closestFrame?.timestamp)) {
                     minDiff = diff;
                     closestFrame = frame;
@@ -99,10 +101,10 @@ export default function MIDIThing({
             }
         }
 
-        // Timing calculation
+        // --- Timing calculation ---
         const msPerBeat = 60000 / bpm;
         const msPerSubBeat = msPerBeat / subdivision;
-        const tolerance = msPerSubBeat * 0.2;
+        const tolerance = Math.min(60, Math.max(40, msPerSubBeat * 0.2));
 
         log(`Hit at ${timestamp.toFixed(1)}ms, msPerSubBeat: ${msPerSubBeat.toFixed(1)}, tolerance: ±${tolerance.toFixed(1)}`);
 
@@ -153,23 +155,18 @@ export default function MIDIThing({
             }
         }
 
-        // --- Fixed safe logging with proper object structure ---
+        // --- Structured safe logging 
         if (sessionLogRef?.current) {
-            // Initialize sessionLogRef structure if needed
-            if (!sessionLogRef.current.startTime) {
-                sessionLogRef.current.startTime = sessionStartTime.current;
-            }
-            if (!sessionLogRef.current.bpm) {
-                sessionLogRef.current.bpm = bpm;
-            }
-            if (!sessionLogRef.current.subdivision) {
-                sessionLogRef.current.subdivision = subdivision;
+            if (!sessionLogRef.current.metadata) {
+                sessionLogRef.current.metadata = {
+                    startTime: sessionStartTime.current,
+                    bpm,
+                    subdivision,
+                };
             }
             if (!Array.isArray(sessionLogRef.current.hits)) {
                 sessionLogRef.current.hits = [];
             }
-
-            // Push the HitEvent
             sessionLogRef.current.hits.push(HitEvent);
         } else {
             console.warn("sessionLogRef not provided, skipping logging");
