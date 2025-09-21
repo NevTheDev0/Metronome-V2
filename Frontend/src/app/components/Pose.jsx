@@ -100,11 +100,48 @@ const PoseWebcam = forwardRef(({ poseFramesRef, sessionActive }, ref) => {
                 const leftWrist = result.landmarks[0][15];
                 const rightWrist = result.landmarks[0][16];
 
+                const prev = poseFramesRef.current.length > 0
+                    ? poseFramesRef.current[poseFramesRef.current.length - 1]
+                    : null;
+                const dt = prev ? (timestamp - prev.timestamp) / 1000 : null; // seconds
+
+                //Pose Stuff for Normalization(So you dont skew the height bc ur far from the webcam)
+
+                const leftShoulder = result.landmarks[0][11];
+                const rightShoulder = result.landmarks[0][12];
+                const leftHip = result.landmarks[0][23];
+                const rightHip = result.landmarks[0][24];
+
+                const shoulderY = (leftShoulder.y + rightShoulder.y) / 2;
+                const hipY = (leftHip.y + rightHip.y) / 2;
+                const torsoLength = hipY - shoulderY;
+
+                function buildWristData(wrist, prevWrist) {
+                    if (!wrist) return null;
+                    const data = { x: wrist.x, y: wrist.y, z: wrist.z };
+
+                    if (prevWrist && dt && dt > 0) {
+                        const dx = wrist.x - prevWrist.x;
+                        const dy = wrist.y - prevWrist.y;
+                        const dz = wrist.z - prevWrist.z;
+                        data.velocity = Math.sqrt(dx * dx + dy * dy + dz * dz) / dt;
+                    }
+
+                    if (shoulderY && hipY && torsoLength > 0) {
+                        data.height = (shoulderY - wrist.y) / torsoLength;
+                    } else {
+                        data.height = 1 - wrist.y; // fallback if torso not valid
+                    }
+
+                    return data;
+                }
+
                 const poseFrame = {
                     timestamp,
-                    leftWrist: leftWrist ? { x: leftWrist.x, y: leftWrist.y, z: leftWrist.z } : null,
-                    rightWrist: rightWrist ? { x: rightWrist.x, y: rightWrist.y, z: rightWrist.z } : null
+                    leftWrist: buildWristData(leftWrist, prev?.leftWrist),
+                    rightWrist: buildWristData(rightWrist, prev?.rightWrist),
                 };
+
 
                 poseFramesRef.current.push(poseFrame);
                 poseFramesRef.current = poseFramesRef.current.filter(
