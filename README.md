@@ -1,5 +1,5 @@
 # Metronome-V2
-AI Drumming Coach for those looking to self teach, and because I'm a drummer
+Drumming Coach for those looking to self teach, and because I'm a drummer
 
 ### Live Site
 You can try it out here 👉 (or don't and keep reading the README like a nerd) : [Metronome-V2 Demo](https://metronome-v2.vercel.app/)
@@ -47,11 +47,14 @@ But it will not instantly make you a professional, you do that by practicing
 - September 18th: Added the "Adaptive Tempo" feature, which helps you assess and change tempo automatically (helps me personally because I don't know when to move a tempo up or down when practicing)
 - September 19th: Added the Summary Screen to actually show you a summary and give it a cleaner look, also rewired the Pose/Webcam component bc it kept turning itself on to spy on you(Creepy) so now end session also stops the camera (This took me like an hour and a half to figure out)
 - September 20th: Not all fixes done today but fixed adaptive tempo and how it works, also added a better MIDI thereshold so its not jank
+- September 21st: V1 alpha prototype (mouthful I know) is done, today I simply added wrist velocity and some tiny bug fixes. These metrics are prepping for something I originally planned for this project to do (OOO queue spooky AI stuff)
 
 ### Next Steps
 - Begin collecting drum audio and MIDI data ✅
 - Start feature extraction and baseline model testing ✅
-- Forgot to update this... will do soon
+- Rewired V1 to not overcomplicate ✅
+- Finished Prototype V1 ✅
+- Begin the AI process ❌
 
 
 
@@ -66,4 +69,5 @@ But it will not instantly make you a professional, you do that by practicing
 - 2025-09-18: Added the "Adaptive Tempo" feature to the MetronomeV2 app
 - 2025-09-19: Added a clean summary screen so you can track your session there! (So cool and Niche)
 - 2025-09-20: Fixed how Adaptive tempo works
+- 2025-09-21: Fixed some bugs, and most importantly added Velocity for wrists marking the end for V1 alpha
 
