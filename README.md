@@ -46,6 +46,7 @@ But it will not instantly make you a professional, you do that by practicing
 - September 17th: Refactored the drumming coach for 2 weeks and replanned how the AI model will work
 - September 18th: Added the "Adaptive Tempo" feature, which helps you assess and change tempo automatically (helps me personally because I don't know when to move a tempo up or down when practicing)
 - September 19th: Added the Summary Screen to actually show you a summary and give it a cleaner look, also rewired the Pose/Webcam component bc it kept turning itself on to spy on you(Creepy) so now end session also stops the camera (This took me like an hour and a half to figure out)
+- September 20th: Not all fixes done today but fixed adaptive tempo and how it works, also added a better MIDI thereshold so its not jank
 
 ### Next Steps
 - Begin collecting drum audio and MIDI data ✅
@@ -63,5 +64,6 @@ But it will not instantly make you a professional, you do that by practicing
 - 2025-09-5: Trained the model, then realized... why am I training a "timing" classifier on "pose" data? Redoing entire workflow just because(DW I will not slack off this time)
 - 2025-09-17: Got the baseline stuff done (Metronome, Hit Accuracy, Hit Timing, Streak, Pose Skeleton). I will update more stuff today to introduce new features
 - 2025-09-18: Added the "Adaptive Tempo" feature to the MetronomeV2 app
-- 2025=09-19: Added a clean summary screen so you can track your session there! (So cool and Niche)
+- 2025-09-19: Added a clean summary screen so you can track your session there! (So cool and Niche)
+- 2025-09-20: Fixed how Adaptive tempo works
 
