@@ -48,13 +48,22 @@ But it will not instantly make you a professional, you do that by practicing
 - September 19th: Added the Summary Screen to actually show you a summary and give it a cleaner look, also rewired the Pose/Webcam component bc it kept turning itself on to spy on you(Creepy) so now end session also stops the camera (This took me like an hour and a half to figure out)
 - September 20th: Not all fixes done today but fixed adaptive tempo and how it works, also added a better MIDI thereshold so its not jank
 - September 21st: V1 alpha prototype (mouthful I know) is done, today I simply added wrist velocity and some tiny bug fixes. These metrics are prepping for something I originally planned for this project to do (OOO queue spooky AI stuff)
+- September 22nd: AI part is done, I collected my data(drumming features from live recordings of my self)
+- September 23rd: Started reengineering features
+- September 24th: Worked on the baseline model to predict hits vs non hits (Used RandomForest)
+- September 25-26th: Took a well deserved break lol
+- September 27th: Worked on the MLP so I dont JUST use RandomForest 
 
 ### Next Steps
 - Begin collecting drum audio and MIDI data ✅
 - Start feature extraction and baseline model testing ✅
 - Rewired V1 to not overcomplicate ✅
 - Finished Prototype V1 ✅
-- Begin the AI process ❌
+- Begin the AI process ✅
+- Begin Collecting Data from live recordings (of myself) ✅
+- Finish a small working model ✅
+- Work on the research part of this ❌
+- Notebooks ❌
 
 
 
@@ -70,4 +79,8 @@ But it will not instantly make you a professional, you do that by practicing
 - 2025-09-19: Added a clean summary screen so you can track your session there! (So cool and Niche)
 - 2025-09-20: Fixed how Adaptive tempo works
 - 2025-09-21: Fixed some bugs, and most importantly added Velocity for wrists marking the end for V1 alpha
+- 2025-09-22: Started collecting AI data (No not from you guys but from me_
+- 2025-09-23: Engineered the AI's features
+- 2025-09-24: Worked on the baseline model(s)
+- 2025-09-27: Engineered the MLP(Multilayer Perceptron) basically a neural network version of Trees, files not uploaded yet because they are all over the place
 
