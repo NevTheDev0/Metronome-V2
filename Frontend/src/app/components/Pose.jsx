@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react";
 import { PoseLandmarker, FilesetResolver, DrawingUtils } from "@mediapipe/tasks-vision";
 
-const PoseWebcam = forwardRef(({ poseFramesRef, sessionActive }, ref) => {
+const PoseWebcam = forwardRef(({ poseFramesRef, sessionActive, sessionLogRef }, ref) => {
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
     const poseRef = useRef(null);
@@ -29,8 +29,8 @@ const PoseWebcam = forwardRef(({ poseFramesRef, sessionActive }, ref) => {
                 },
                 runningMode: "VIDEO",
                 numPoses: 1,
-                minPoseDetectionConfidence: 0.5,
-                minTrackingConfidence: 0.5,
+                minPoseDetectionConfidence: 0.4,
+                minTrackingConfidence: 0.4,
             });
 
             setIsModelLoaded(true);
@@ -105,8 +105,7 @@ const PoseWebcam = forwardRef(({ poseFramesRef, sessionActive }, ref) => {
                     : null;
                 const dt = prev ? (timestamp - prev.timestamp) / 1000 : null; // seconds
 
-                //Pose Stuff for Normalization(So you dont skew the height bc ur far from the webcam)
-
+                // Pose Stuff for Normalization
                 const leftShoulder = result.landmarks[0][11];
                 const rightShoulder = result.landmarks[0][12];
                 const leftHip = result.landmarks[0][23];
@@ -125,6 +124,11 @@ const PoseWebcam = forwardRef(({ poseFramesRef, sessionActive }, ref) => {
                         const dy = wrist.y - prevWrist.y;
                         const dz = wrist.z - prevWrist.z;
                         data.velocity = Math.sqrt(dx * dx + dy * dy + dz * dz) / dt;
+
+                        // Add acceleration calculation
+                        if (prevWrist.velocity !== undefined) {
+                            data.acceleration = (data.velocity - prevWrist.velocity) / dt;
+                        }
                     }
 
                     if (shoulderY && hipY && torsoLength > 0) {
@@ -136,18 +140,39 @@ const PoseWebcam = forwardRef(({ poseFramesRef, sessionActive }, ref) => {
                     return data;
                 }
 
+                // Create the pose frame FIRST
                 const poseFrame = {
                     timestamp,
                     leftWrist: buildWristData(leftWrist, prev?.leftWrist),
                     rightWrist: buildWristData(rightWrist, prev?.rightWrist),
                 };
 
-
+                // Add to poseFramesRef
                 poseFramesRef.current.push(poseFrame);
+
+                // Log non-hit frames to sessionLogRef (only during active session)
+                if (sessionActive && sessionLogRef?.current) {
+                    if (!sessionLogRef.current.frames) {
+                        sessionLogRef.current.frames = [];
+                    }
+
+                    sessionLogRef.current.frames.push({
+                        timestamp_ms_relative: timestamp - (sessionLogRef.current.startTime || timestamp),
+                        frame_type: "non-hit",
+                        left_wrist: poseFrame.leftWrist,
+                        right_wrist: poseFrame.rightWrist,
+                        hand: null,
+                        pad_zone: null,
+                        hit_velocity: null
+                    });
+                }
+
+                // Clean up old frames
                 poseFramesRef.current = poseFramesRef.current.filter(
                     frame => timestamp - frame.timestamp < MAX_FRAME_AGE_MS
                 );
 
+                // Draw the pose
                 drawingUtils.drawConnectors(result.landmarks[0], PoseLandmarker.POSE_CONNECTIONS);
                 drawingUtils.drawLandmarks(result.landmarks[0], { color: "red", lineWidth: 2, radius: 4 });
             }
@@ -156,7 +181,6 @@ const PoseWebcam = forwardRef(({ poseFramesRef, sessionActive }, ref) => {
             rAFRef.current = requestAnimationFrame(predictWebcam);
         });
     }
-
     // --- Force stop camera when session ends ---
     useEffect(() => {
         if (!sessionActive) {

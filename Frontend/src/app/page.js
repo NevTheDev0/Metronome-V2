@@ -5,6 +5,7 @@ import MIDIThing from "./components/Midi";
 import Metronome from "./components/Metronome";
 import Feedback from "./components/Feedback";
 import SummaryScreen from "./components/SummaryScreen";
+import DataExport from "./DataExport";
 
 export default function Home() {
   // --- References & Session State ---
@@ -21,6 +22,7 @@ export default function Home() {
     bpm: 120,
     subdivision: 1,
     hits: [],
+    frames: [],
     streakCount: 0,
     streakHistory: [],
     accuracy: 0,
@@ -40,7 +42,8 @@ export default function Home() {
   const [summary, setSummary] = useState(null);
   const [sessionActive, setSessionActive] = useState(false);
 
-
+  
+  
   // --- Adaptive Tempo Effect ---
   useEffect(() => {
     if (!isPlaying || !adaptiveMode) return;
@@ -80,6 +83,16 @@ export default function Home() {
 
     return () => clearInterval(interval);
   }, [isPlaying, adaptiveMode]); // Dependency array is correct
+  
+  // 3. Add the useEffect to expose sessionLogRef (add this after your existing useEffects)
+  useEffect(() => {
+    // Make sessionLogRef accessible to PoseWebcam
+    window.sessionLogRef = sessionLogRef.current;
+
+    return () => {
+      delete window.sessionLogRef;
+    };
+  }, []);
 
 
   // --- Start Session ---
@@ -119,6 +132,7 @@ export default function Home() {
       bpm: 120,
       subdivision: 1,
       hits: [],
+      frames: [],
       streakCount: 0,
       streakHistory: [],
       accuracy: 0,
@@ -256,6 +270,7 @@ export default function Home() {
             {/* Center - Webcam */}
             <div className="flex-shrink-0">
               <PoseWebcam
+                sessionLogRef={sessionLogRef} 
                 poseFramesRef={poseFramesRef}
                 sessionActive={sessionActive}
                 ref={poseWebcamRef}
@@ -273,13 +288,13 @@ export default function Home() {
                 key={sessionId}
                 rollingAccuracy={sessionLogRef.current.rollingAccuracy || 0}
               />
-
               <button
                 onClick={handleEndSession}
                 className="w-full py-3 rounded-xl font-semibold bg-red-600 hover:bg-red-700 shadow-lg shadow-red-600/30 transition-colors duration-200 mt-6"
               >
                 End Session
               </button>
+              <DataExport sessionLogRef={sessionLogRef} />
             </div>
           </section>
 
