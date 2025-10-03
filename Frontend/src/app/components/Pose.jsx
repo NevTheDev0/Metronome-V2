@@ -8,6 +8,7 @@ const PoseWebcam = forwardRef(({ poseFramesRef, sessionActive, sessionLogRef }, 
     const poseRef = useRef(null);
     const drawingUtilsRef = useRef(null);
     const rAFRef = useRef(null);
+    const frameCountRef = useRef(0);
 
     const MAX_FRAME_AGE_MS = 200;
 
@@ -15,6 +16,19 @@ const PoseWebcam = forwardRef(({ poseFramesRef, sessionActive, sessionLogRef }, 
     const [isCameraOn, setIsCameraOn] = useState(false);
     const [isModelLoaded, setIsModelLoaded] = useState(false);
     const [stream, setStream] = useState(null);
+    const [lastPrediction, setLastPrediction] = useState(null);
+    const [backendStatus, setBackendStatus] = useState('checking');
+
+    // Check backend on mount
+    useEffect(() => {
+        fetch('http://localhost:8000/')
+            .then(res => res.json())
+            .then(data => {
+                console.log('Backend status:', data);
+                setBackendStatus(data.model_loaded ? 'online' : 'model_error');
+            })
+            .catch(() => setBackendStatus('offline'));
+    }, []);
 
     async function initPose() {
         try {
@@ -50,6 +64,12 @@ const PoseWebcam = forwardRef(({ poseFramesRef, sessionActive, sessionLogRef }, 
             videoRef.current.srcObject = mediaStream;
             setIsCameraOn(true);
             await videoRef.current.play();
+
+            // Reset backend buffers when starting new session
+            if (backendStatus === 'online') {
+                fetch('http://localhost:8000/reset', { method: 'POST' })
+                    .catch(err => console.warn('Failed to reset backend:', err));
+            }
         } catch (err) {
             console.error("Camera error:", err);
             setError(`Camera error: ${err.message}`);
@@ -103,9 +123,8 @@ const PoseWebcam = forwardRef(({ poseFramesRef, sessionActive, sessionLogRef }, 
                 const prev = poseFramesRef.current.length > 0
                     ? poseFramesRef.current[poseFramesRef.current.length - 1]
                     : null;
-                const dt = prev ? (timestamp - prev.timestamp) / 1000 : null; // seconds
+                const dt = prev ? (timestamp - prev.timestamp) / 1000 : null;
 
-                // Pose Stuff for Normalization
                 const leftShoulder = result.landmarks[0][11];
                 const rightShoulder = result.landmarks[0][12];
                 const leftHip = result.landmarks[0][23];
@@ -125,7 +144,6 @@ const PoseWebcam = forwardRef(({ poseFramesRef, sessionActive, sessionLogRef }, 
                         const dz = wrist.z - prevWrist.z;
                         data.velocity = Math.sqrt(dx * dx + dy * dy + dz * dz) / dt;
 
-                        // Add acceleration calculation
                         if (prevWrist.velocity !== undefined) {
                             data.acceleration = (data.velocity - prevWrist.velocity) / dt;
                         }
@@ -134,23 +152,75 @@ const PoseWebcam = forwardRef(({ poseFramesRef, sessionActive, sessionLogRef }, 
                     if (shoulderY && hipY && torsoLength > 0) {
                         data.height = (shoulderY - wrist.y) / torsoLength;
                     } else {
-                        data.height = 1 - wrist.y; // fallback if torso not valid
+                        data.height = 1 - wrist.y;
                     }
 
                     return data;
                 }
 
-                // Create the pose frame FIRST
                 const poseFrame = {
                     timestamp,
                     leftWrist: buildWristData(leftWrist, prev?.leftWrist),
                     rightWrist: buildWristData(rightWrist, prev?.rightWrist),
                 };
 
-                // Add to poseFramesRef
                 poseFramesRef.current.push(poseFrame);
 
-                // Log non-hit frames to sessionLogRef (only during active session)
+                // Only predict every 2nd frame to reduce load (still ~15fps)
+                frameCountRef.current++;
+                if (backendStatus === 'online' &&
+                    frameCountRef.current % 2 === 0 &&
+                    poseFrame.leftWrist?.velocity !== undefined &&
+                    poseFrame.leftWrist?.acceleration !== undefined) {
+
+                    fetch('http://localhost:8000/predict', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            timestamp: poseFrame.timestamp,
+                            left_wrist_x: poseFrame.leftWrist.x,
+                            left_wrist_y: poseFrame.leftWrist.y,
+                            left_wrist_z: poseFrame.leftWrist.z,
+                            left_wrist_velocity: poseFrame.leftWrist.velocity,
+                            left_wrist_acceleration: poseFrame.leftWrist.acceleration,
+                            right_wrist_x: poseFrame.rightWrist.x,
+                            right_wrist_y: poseFrame.rightWrist.y,
+                            right_wrist_z: poseFrame.rightWrist.z,
+                            right_wrist_velocity: poseFrame.rightWrist.velocity,
+                            right_wrist_acceleration: poseFrame.rightWrist.acceleration,
+                        })
+                    })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.status === 'warming_up') return;
+
+                            // Store ALL predictions (not just hits) for analysis
+                            if (sessionLogRef?.current && sessionActive) {
+                                if (!sessionLogRef.current.predictions) {
+                                    sessionLogRef.current.predictions = [];
+                                }
+                                sessionLogRef.current.predictions.push({
+                                    timestamp_ms: poseFrame.timestamp,
+                                    timestamp_ms_relative: poseFrame.timestamp - (sessionLogRef.current.startTime || poseFrame.timestamp),
+                                    probability: data.probability,
+                                    predicted_class: data.predicted_class,
+                                    confidence: data.confidence,
+                                    left_wrist: poseFrame.leftWrist,
+                                    right_wrist: poseFrame.rightWrist,
+                                });
+                            }
+
+                            // Visual feedback for predicted hits
+                            if (data.predicted_class === 1) {
+                                setLastPrediction(data.probability);
+                                setTimeout(() => setLastPrediction(null), 200);
+                                console.log(`HIT PREDICTED! Prob: ${data.probability.toFixed(3)}, Confidence: ${data.confidence}`);
+                            }
+                        })
+                        .catch(err => console.error('Prediction error:', err));
+                }
+
+                // Log pose frames
                 if (sessionActive && sessionLogRef?.current) {
                     if (!sessionLogRef.current.frames) {
                         sessionLogRef.current.frames = [];
@@ -161,18 +231,13 @@ const PoseWebcam = forwardRef(({ poseFramesRef, sessionActive, sessionLogRef }, 
                         frame_type: "non-hit",
                         left_wrist: poseFrame.leftWrist,
                         right_wrist: poseFrame.rightWrist,
-                        hand: null,
-                        pad_zone: null,
-                        hit_velocity: null
                     });
                 }
 
-                // Clean up old frames
                 poseFramesRef.current = poseFramesRef.current.filter(
                     frame => timestamp - frame.timestamp < MAX_FRAME_AGE_MS
                 );
 
-                // Draw the pose
                 drawingUtils.drawConnectors(result.landmarks[0], PoseLandmarker.POSE_CONNECTIONS);
                 drawingUtils.drawLandmarks(result.landmarks[0], { color: "red", lineWidth: 2, radius: 4 });
             }
@@ -181,7 +246,7 @@ const PoseWebcam = forwardRef(({ poseFramesRef, sessionActive, sessionLogRef }, 
             rAFRef.current = requestAnimationFrame(predictWebcam);
         });
     }
-    // --- Force stop camera when session ends ---
+
     useEffect(() => {
         if (!sessionActive) {
             stopCamera();
@@ -211,7 +276,6 @@ const PoseWebcam = forwardRef(({ poseFramesRef, sessionActive, sessionLogRef }, 
         }
     }, [isCameraOn, stream]);
 
-    // --- Expose stopCamera to parent ---
     useImperativeHandle(ref, () => ({
         stopCamera
     }));
@@ -230,6 +294,43 @@ const PoseWebcam = forwardRef(({ poseFramesRef, sessionActive, sessionLogRef }, 
                     ref={canvasRef}
                     style={{ position: 'absolute', top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "black" }}
                 />
+
+                {/* Backend status indicator */}
+                <div style={{
+                    position: 'absolute',
+                    top: 10,
+                    left: 10,
+                    background: backendStatus === 'online' ? 'rgba(0,200,0,0.8)' :
+                        backendStatus === 'offline' ? 'rgba(200,0,0,0.8)' :
+                            'rgba(200,200,0,0.8)',
+                    color: 'white',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                }}>
+                    ML: {backendStatus === 'online' ? 'READY' : backendStatus === 'offline' ? 'OFFLINE' : 'LOADING'}
+                </div>
+
+                {/* Prediction flash */}
+                {lastPrediction && (
+                    <div style={{
+                        position: 'absolute',
+                        top: 10,
+                        right: 10,
+                        background: 'rgba(0,255,0,0.9)',
+                        color: 'black',
+                        padding: '12px 20px',
+                        borderRadius: '8px',
+                        fontWeight: 'bold',
+                        fontSize: '16px',
+                        boxShadow: '0 0 20px rgba(0,255,0,0.6)',
+                        animation: 'pulse 0.2s',
+                    }}>
+                        🎯 HIT! {(lastPrediction * 100).toFixed(0)}%
+                    </div>
+                )}
+
                 {error && (
                     <div style={{
                         position: "absolute",
