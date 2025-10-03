@@ -1,3 +1,13 @@
+---
+title: Metronome V2 API
+emoji: 🤖
+colorFrom: green
+colorTo: blue
+sdk: docker  # <--- Use 'docker' for a Dockerized application
+app_file: app.py # <--- This line is optional/ignored for 'docker' but harmless
+---
+
+
 # Metronome-V2
 Drumming Coach for those looking to self teach, and because I'm a drummer
 
