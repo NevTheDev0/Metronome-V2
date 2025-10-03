@@ -3,8 +3,8 @@ title: Metronome V2 API
 emoji: 🤖
 colorFrom: green
 colorTo: blue
-sdk: docker  # <--- Use 'docker' for a Dockerized application
-app_file: Backend/Dockerfile # <--- This line is optional/ignored for 'docker' but harmless
+sdk: docker
+app_port: 8000 # Make sure this matches your EXPOSE and CMD port!
 ---
 
 
