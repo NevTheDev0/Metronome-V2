@@ -1,3 +1,13 @@
+---
+title: Metronome V2 API
+emoji: 🤖
+colorFrom: green
+colorTo: blue
+sdk: docker
+app_port: 8000 # Make sure this matches your EXPOSE and CMD port!
+---
+
+
 # Metronome-V2
 Drumming Coach for those looking to self teach, and because I'm a drummer
 
