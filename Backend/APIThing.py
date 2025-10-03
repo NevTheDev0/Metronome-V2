@@ -6,6 +6,7 @@ import numpy as np
 import tensorflow as tf
 from typing import Optional
 import logging
+from pathlib import Path
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -13,9 +14,9 @@ logger = logging.getLogger(__name__)
 
 # Load model with error handling
 try:
-    model = tf.keras.models.load_model(
-        r"D:\MetronomeV22\Metronome-V2\Backend\Models\hit_predictor2.keras"
-    )
+    BASE_DIR = Path(__file__).resolve().parent
+    MODEL_PATH = BASE_DIR / "Models" / "hit_predictor2.keras"
+    model = tf.keras.models.load_model(str(MODEL_PATH))
     logger.info("Model loaded successfully")
 except Exception as e:
     logger.error(f"Failed to load model: {e}")
