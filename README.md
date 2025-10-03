@@ -52,7 +52,8 @@ But it will not instantly make you a professional, you do that by practicing
 - September 23rd: Started reengineering features
 - September 24th: Worked on the baseline model to predict hits vs non hits (Used RandomForest)
 - September 25-26th: Took a well deserved break lol
-- September 27th: Worked on the MLP so I dont JUST use RandomForest 
+- September 27th: Worked on the MLP so I dont JUST use RandomForest
+- October 3rd: AI was convulting but I realized I can just update it as time goes on, anyways setting up the Docker and getting ready to merge branch w this! almost done guys you will be able to use the pretty okay AI
 
 ### Next Steps
 - Begin collecting drum audio and MIDI data ✅
@@ -63,7 +64,7 @@ But it will not instantly make you a professional, you do that by practicing
 - Begin Collecting Data from live recordings (of myself) ✅
 - Finish a small working model ✅
 - Work on the research part of this ❌
-- Notebooks ❌
+- Notebooks ✅
 
 
 
@@ -83,4 +84,5 @@ But it will not instantly make you a professional, you do that by practicing
 - 2025-09-23: Engineered the AI's features
 - 2025-09-24: Worked on the baseline model(s)
 - 2025-09-27: Engineered the MLP(Multilayer Perceptron) basically a neural network version of Trees, files not uploaded yet because they are all over the place
+- 2025-10-3: Docker setting UP Naive AI is getting put into play
 
