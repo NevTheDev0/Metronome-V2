@@ -2,7 +2,8 @@
 Drumming Coach for those looking to self teach, and because I'm a drummer
 
 ### Live Site
-You can try it out here 👉 (or don't and keep reading the README like a nerd) : [Metronome-V2 Demo](https://metronome-v2.vercel.app/)
+You can try it out here 👉 (or don't and keep reading the README like a nerd) : [Metronome-V2 Demo](https://metronome-v2.vercel.app/) OR YOU CAN TRY the one with the AI Prediction built into it [Metronome-V2 AI Demo](https://metronome-v2-git-ai-integration-nevthedev0s-projects.vercel.app/)
+
 
 
 ### Why?
@@ -55,6 +56,7 @@ But it will not instantly make you a professional, you do that by practicing
 - September 27th: Worked on the MLP so I dont JUST use RandomForest
 - October 3rd: AI was convulting but I realized I can just update it as time goes on, anyways setting up the Docker and getting ready to merge branch w this! almost done guys you will be able to use the pretty okay AI
 - October 4th: I needed a web cloud service for this and it needed some info I wasn't willing to give so you can only run this locally for the sake of demo purposes
+- October 4th: I integrated Vercel with HuggingFace to be able to make it so you can demo it yourself! Pat on the back for me and another step towards this....which means V2 Alpha is done! ggs
 
 ### Next Steps
 - Begin collecting drum audio and MIDI data ✅
@@ -87,4 +89,5 @@ But it will not instantly make you a professional, you do that by practicing
 - 2025-09-27: Engineered the MLP(Multilayer Perceptron) basically a neural network version of Trees, files not uploaded yet because they are all over the place
 - 2025-10-3: Docker setting UP Naive AI is getting put into play
 - 2025-10-4: Won't be able to set it up live so the AI Integration is only local now
+- 2025-10-4: I LIED IT WORKS HAHAH SCREW U!, go check it out, if you need the code it is in the AI-integration branch of this project
 
