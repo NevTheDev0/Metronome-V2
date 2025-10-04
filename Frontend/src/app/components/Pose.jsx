@@ -2,6 +2,11 @@
 import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react";
 import { PoseLandmarker, FilesetResolver, DrawingUtils } from "@mediapipe/tasks-vision";
 
+// --- START: Configuration Update ---
+// Using the deployed Hugging Face Space URL for the backend API
+const API_BASE_URL = 'https://nevthedev7-metronome-v2-api.hf.space';
+// --- END: Configuration Update ---
+
 const PoseWebcam = forwardRef(({ poseFramesRef, sessionActive, sessionLogRef }, ref) => {
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
@@ -19,12 +24,13 @@ const PoseWebcam = forwardRef(({ poseFramesRef, sessionActive, sessionLogRef }, 
     const [lastPrediction, setLastPrediction] = useState(null);
     const [backendStatus, setBackendStatus] = useState('checking');
 
-    // Check backend on mount
+    // Check backend on mount, now using the Hugging Face URL
     useEffect(() => {
-        fetch('http://localhost:8000/')
+        fetch(`${API_BASE_URL}/`)
             .then(res => res.json())
             .then(data => {
                 console.log('Backend status:', data);
+                // Assuming the backend response structure is correct
                 setBackendStatus(data.model_loaded ? 'online' : 'model_error');
             })
             .catch(() => setBackendStatus('offline'));
@@ -65,9 +71,9 @@ const PoseWebcam = forwardRef(({ poseFramesRef, sessionActive, sessionLogRef }, 
             setIsCameraOn(true);
             await videoRef.current.play();
 
-            // Reset backend buffers when starting new session
+            // Reset backend buffers when starting new session, using the Hugging Face URL
             if (backendStatus === 'online') {
-                fetch('http://localhost:8000/reset', { method: 'POST' })
+                fetch(`${API_BASE_URL}/reset`, { method: 'POST' })
                     .catch(err => console.warn('Failed to reset backend:', err));
             }
         } catch (err) {
@@ -173,7 +179,8 @@ const PoseWebcam = forwardRef(({ poseFramesRef, sessionActive, sessionLogRef }, 
                     poseFrame.leftWrist?.velocity !== undefined &&
                     poseFrame.leftWrist?.acceleration !== undefined) {
 
-                    fetch('http://localhost:8000/predict', {
+                    // Using the Hugging Face URL for prediction
+                    fetch(`${API_BASE_URL}/predict`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -282,6 +289,14 @@ const PoseWebcam = forwardRef(({ poseFramesRef, sessionActive, sessionLogRef }, 
 
     return (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "4px" }}>
+            {/* Minimal CSS for the pulse animation */}
+            <style jsx="true">{`
+                @keyframes pulse {
+                    0% { transform: scale(1); opacity: 1; }
+                    50% { transform: scale(1.05); opacity: 0.9; }
+                    100% { transform: scale(1); opacity: 1; }
+                }
+            `}</style>
             <div style={{ position: "relative", width: "640px", height: "480px" }}>
                 <video
                     ref={videoRef}
